@@ -3,13 +3,14 @@ import { ArrowLeft, Calendar, Users } from "lucide-react";
 import { movies } from "@/data/movies";
 import { useRatings } from "@/hooks/useRatings";
 import StarRating from "@/components/StarRating";
+import type { Movie } from "../types/movie";
 
 const MovieDetailPage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { getRating, setRating, removeRating } = useRatings();
 
-  const movie = movies.find((m) => m.id === Number(id));
+  const movie = movies.find((m: Movie) => m.id === Number(id));
 
   if (!movie) {
     return (
@@ -55,7 +56,7 @@ const MovieDetailPage = () => {
           <div>
             <h1 className="text-3xl font-bold text-foreground mb-2">{movie.title}</h1>
             <div className="flex flex-wrap gap-2 mb-4">
-              {movie.genre.map((g) => (
+              {movie.genre.map((g: string) => (
                 <span
                   key={g}
                   className="text-xs font-medium bg-secondary text-secondary-foreground px-2.5 py-1 rounded-md"
@@ -87,7 +88,7 @@ const MovieDetailPage = () => {
               Elenco
             </h2>
             <div className="flex flex-wrap gap-2">
-              {movie.cast.map((actor) => (
+              {movie.cast.map((actor: string) => (
                 <span
                   key={actor}
                   className="text-sm bg-muted text-muted-foreground px-3 py-1.5 rounded-md"

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { MovieRating } from "@/types/movie";
+import type { MovieRating } from "../types/movie";
 
 const STORAGE_KEY = "movie-ratings";
 

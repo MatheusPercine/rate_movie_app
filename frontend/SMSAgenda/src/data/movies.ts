@@ -1,4 +1,4 @@
-import { Movie } from "@/types/movie";
+import type { Movie } from "../types/movie";
 
 export const GENRES = [
   "Ação", "Aventura", "Comédia", "Drama", "Ficção Científica",
