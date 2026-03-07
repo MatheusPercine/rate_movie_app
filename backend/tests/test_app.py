@@ -66,10 +66,12 @@ def test_create_and_get_rating(monkeypatch):
     response = client.post("/api/ratings", json={"movie_id": 550, "rating": 5})
     assert response.status_code == 201
     assert response.get_json()["rating"] == 5
+    assert response.get_json()["movie_title"] == "Fight Club"
 
     response = client.get("/api/ratings/550")
     assert response.status_code == 200
     assert response.get_json()["movie_id"] == 550
+    assert response.get_json()["movie_title"] == "Fight Club"
 
 
 def test_list_rated_movies(monkeypatch):
@@ -82,6 +84,7 @@ def test_list_rated_movies(monkeypatch):
     assert response.status_code == 200
     assert payload["total"] == 1
     assert payload["results"][0]["user_rating"] == 4
+    assert payload["results"][0]["movie_title"] == "Fight Club"
 
 
 def test_movie_details_includes_user_rating(monkeypatch):
@@ -99,9 +102,11 @@ def test_update_and_delete_rating(monkeypatch):
     client, _app = create_test_client(monkeypatch)
     client.post("/api/ratings", json={"movie_id": 550, "rating": 2})
 
-    response = client.put("/api/ratings/550", json={"rating": 5})
+    response = client.put("/api/ratings/550",
+                          json={"rating": 5, "movie_title": "Clube da Luta"})
     assert response.status_code == 200
     assert response.get_json()["rating"] == 5
+    assert response.get_json()["movie_title"] == "Clube da Luta"
 
     response = client.delete("/api/ratings/550")
     assert response.status_code == 204

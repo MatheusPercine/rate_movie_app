@@ -10,6 +10,7 @@ A entidade persistida é `Rating`.
 | --- | --- | --- |
 | `id` | int | identificador interno |
 | `movie_id` | int | identificador do filme no TMDB |
+| `movie_name` | int | identificador do filme no TMDB |
 | `rating` | int | nota do usuário, de 1 a 5 |
 | `created_at` | datetime | data de criação |
 | `updated_at` | datetime | data da última edição |
@@ -51,6 +52,10 @@ A entidade persistida é `Rating`.
 ## Como rodar
 
 1. Crie um arquivo `.env` baseado em `.env.example`.
+  `.env` projeto original:
+  TMDB_API_KEY=9532f82b3e7c83bb1134af3b2a8b07fb
+  DATABASE_URL=postgresql+psycopg://postgres:root@localhost:5432/ratedmovies
+  SECRET_KEY=dev-secret-key
 2. Crie no PostgreSQL um banco chamado `rate_movie_app`.
 3. Configure `TMDB_API_KEY` e `DATABASE_URL`.
 4. Instale as dependências.
