@@ -1,51 +1,76 @@
-import { useState, useCallback } from "react";
-import { MovieRating } from "@/types/movie";
+import { useCallback, useMemo } from "react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
-const STORAGE_KEY = "movie-ratings";
+import { createRating, deleteRating, getRatedMovies, updateRating } from "@/services/movies";
 
-function loadRatings(): MovieRating[] {
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
-  } catch {
-    return [];
-  }
-}
-
-function saveRatings(ratings: MovieRating[]) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(ratings));
+interface SetRatingParams {
+  movieId: number;
+  rating: number;
+  hasExistingRating?: boolean;
 }
 
 export function useRatings() {
-  const [ratings, setRatings] = useState<MovieRating[]>(loadRatings);
+  const queryClient = useQueryClient();
 
-  const getRating = useCallback(
-    (movieId: number) => ratings.find((r) => r.movieId === movieId)?.rating ?? null,
+  const { data, isLoading, isFetching, error } = useQuery({
+    queryKey: ["ratings"],
+    queryFn: getRatedMovies,
+  });
+
+  const ratings = data?.results ?? [];
+
+  const ratingsByMovieId = useMemo(
+    () => new Map(ratings.map((rating) => [rating.id, rating.userRating])),
     [ratings]
   );
 
-  const setRating = useCallback(
-    (movieId: number, rating: number) => {
-      setRatings((prev) => {
-        const existing = prev.findIndex((r) => r.movieId === movieId);
-        const next =
-          existing >= 0
-            ? prev.map((r, i) => (i === existing ? { ...r, rating } : r))
-            : [...prev, { movieId, rating }];
-        saveRatings(next);
-        return next;
-      });
-    },
-    []
+  const getRating = useCallback(
+    (movieId: number) => ratingsByMovieId.get(movieId) ?? null,
+    [ratingsByMovieId]
   );
 
-  const removeRating = useCallback((movieId: number) => {
-    setRatings((prev) => {
-      const next = prev.filter((r) => r.movieId !== movieId);
-      saveRatings(next);
-      return next;
-    });
-  }, []);
+  const setRatingMutation = useMutation({
+    mutationFn: async ({ movieId, rating, hasExistingRating }: SetRatingParams) => {
+      const shouldUpdate = hasExistingRating ?? ratingsByMovieId.has(movieId);
+      return shouldUpdate ? updateRating(movieId, rating) : createRating(movieId, rating);
+    },
+    onSuccess: async (_result, variables) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["ratings"] }),
+        queryClient.invalidateQueries({ queryKey: ["movie", variables.movieId] }),
+      ]);
+    },
+  });
 
-  return { ratings, getRating, setRating, removeRating };
+  const removeRatingMutation = useMutation({
+    mutationFn: deleteRating,
+    onSuccess: async (_result, movieId) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["ratings"] }),
+        queryClient.invalidateQueries({ queryKey: ["movie", movieId] }),
+      ]);
+    },
+  });
+
+  const setRating = useCallback(
+    async (movieId: number, rating: number, hasExistingRating?: boolean) =>
+      setRatingMutation.mutateAsync({ movieId, rating, hasExistingRating }),
+    [setRatingMutation]
+  );
+
+  const removeRating = useCallback(
+    async (movieId: number) => removeRatingMutation.mutateAsync(movieId),
+    [removeRatingMutation]
+  );
+
+  return {
+    ratings,
+    getRating,
+    setRating,
+    removeRating,
+    isLoading: isLoading || isFetching,
+    error,
+    isSaving: setRatingMutation.isPending,
+    isRemoving: removeRatingMutation.isPending,
+  };
 }

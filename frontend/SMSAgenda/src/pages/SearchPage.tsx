@@ -1,11 +1,13 @@
-import { useState, useEffect, useMemo } from "react";
-import { movies } from "@/data/movies";
+import { useEffect, useMemo, useState } from "react";
+import { keepPreviousData, useQuery } from "@tanstack/react-query";
+
 import MovieCard from "@/components/MovieCard";
 import MovieCardSkeleton from "@/components/MovieCardSkeleton";
 import Pagination from "@/components/Pagination";
+import { getGenreIdByName } from "@/constants/movie-filters";
+import { useDebounce } from "@/hooks/useDebounce";
 import { useRatings } from "@/hooks/useRatings";
-
-const MOVIES_PER_PAGE = 12;
+import { searchMovies } from "@/services/movies";
 
 interface SearchPageProps {
   searchQuery: string;
@@ -14,73 +16,77 @@ interface SearchPageProps {
 }
 
 const SearchPage = ({ searchQuery, selectedGenre, selectedYear }: SearchPageProps) => {
-  const [loading, setLoading] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
+  const debouncedQuery = useDebounce(searchQuery.trim(), 400);
   const { getRating } = useRatings();
+  const selectedGenreId = useMemo(() => getGenreIdByName(selectedGenre), [selectedGenre]);
+  const hasSearchQuery = debouncedQuery.length > 0;
 
-  // Simulate loading
-  useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => setLoading(false), 600);
-    return () => clearTimeout(timer);
-  }, [searchQuery, selectedGenre, selectedYear]);
-
-  // Reset page on filter change
   useEffect(() => {
     setCurrentPage(1);
-  }, [searchQuery, selectedGenre, selectedYear]);
+  }, [debouncedQuery, selectedGenre, selectedYear]);
+
+  const {
+    data,
+    isLoading,
+    isFetching,
+    error,
+  } = useQuery({
+    queryKey: ["movie-search", debouncedQuery, currentPage],
+    queryFn: () => searchMovies({ query: debouncedQuery, page: currentPage }),
+    enabled: hasSearchQuery,
+    placeholderData: keepPreviousData,
+  });
 
   const filteredMovies = useMemo(() => {
-    let result = [...movies];
+    let result = [...(data?.results ?? [])];
 
-    if (searchQuery.trim()) {
-      const q = searchQuery.toLowerCase();
-      result = result.filter((m) => m.title.toLowerCase().includes(q));
-    }
-
-    if (selectedGenre) {
-      result = result.filter((m) => m.genre.includes(selectedGenre));
+    if (selectedGenreId !== null) {
+      result = result.filter((movie) => movie.genreIds.includes(selectedGenreId));
     }
 
     if (selectedYear) {
-      result = result.filter((m) => m.year === Number(selectedYear));
+      result = result.filter((movie) => movie.year === Number(selectedYear));
     }
 
-    result.sort((a, b) => a.title.localeCompare(b.title, "pt-BR"));
     return result;
-  }, [searchQuery, selectedGenre, selectedYear]);
+  }, [data?.results, selectedGenreId, selectedYear]);
 
-  const totalPages = Math.ceil(filteredMovies.length / MOVIES_PER_PAGE);
-  const paginatedMovies = filteredMovies.slice(
-    (currentPage - 1) * MOVIES_PER_PAGE,
-    currentPage * MOVIES_PER_PAGE
-  );
+  const loading = hasSearchQuery && (isLoading || isFetching);
+  const totalPages = data?.totalPages ?? 0;
+  const errorMessage = error instanceof Error ? error.message : "Não foi possível buscar filmes.";
 
   return (
     <div className="pt-20 pb-12 px-4 container mx-auto min-h-screen">
-      {/* Title */}
       <h1 className="text-2xl font-bold mb-6 text-foreground">
-        {searchQuery.trim()
-          ? `Resultados para "${searchQuery}":`
-          : "Todos os filmes"}
+        {hasSearchQuery ? `Resultados para "${debouncedQuery}":` : "Pesquisar filmes"}
       </h1>
 
-      {/* Loading */}
-      {loading ? (
+      {!hasSearchQuery ? (
+        <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
+          <p className="text-lg">Digite o nome de um filme para pesquisar no TMDB.</p>
+          <p className="text-sm mt-1">Os resultados serão carregados diretamente do backend.</p>
+        </div>
+      ) : loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {Array.from({ length: MOVIES_PER_PAGE }).map((_, i) => (
+          {Array.from({ length: 12 }).map((_, i) => (
             <MovieCardSkeleton key={i} />
           ))}
         </div>
-      ) : paginatedMovies.length === 0 ? (
+      ) : error ? (
+        <div className="flex flex-col items-center justify-center py-24 text-destructive">
+          <p className="text-lg">Erro ao carregar filmes.</p>
+          <p className="text-sm mt-1 text-muted-foreground">{errorMessage}</p>
+        </div>
+      ) : filteredMovies.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
           <p className="text-lg">Nenhum filme encontrado.</p>
-          <p className="text-sm mt-1">Tente ajustar seus filtros ou pesquisa.</p>
+          <p className="text-sm mt-1">Tente outro termo de busca ou ajuste os filtros.</p>
         </div>
       ) : (
         <>
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-            {paginatedMovies.map((movie) => (
+            {filteredMovies.map((movie) => (
               <MovieCard key={movie.id} movie={movie} rating={getRating(movie.id)} />
             ))}
           </div>

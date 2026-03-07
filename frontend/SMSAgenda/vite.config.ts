@@ -15,12 +15,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      // Encaminha chamadas do front (http://localhost:5173) para o backend hospedado (http://devcac:6011)
-      // Evita erro de CORS em desenvolvimento sem precisar alterar o backend imediatamente.
       '/api': {
-        target: 'http://devcac:6011',
+        target: process.env.VITE_BACKEND_URL || 'http://localhost:5000',
         changeOrigin: true,
-        // se o backend não exige path rewrite, mantém como está
       },
     },
   },
