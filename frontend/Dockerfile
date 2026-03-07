@@ -8,20 +8,17 @@ WORKDIR /app
 RUN npm i -g pnpm@9.12.3
 
 # Copy manifest and lock first for better layer caching
-COPY SMSAgenda/pnpm-lock.yaml SMSAgenda/package.json ./
+COPY pnpm-lock.yaml package.json ./
 
 # Install dependencies (dev deps included for build)
 RUN pnpm install --frozen-lockfile
 
 # Copy source and build
-COPY SMSAgenda/ ./
+COPY . .
 
 # Build arg para URL do backend (embarcado no bundle JS)
-ARG VITE_API_BASE_URL=http://devcac:6011/api
-ENV VITE_API_BASE_URL=http://devcac:6011/api
-
-ARG VITE_API_URL_AUTH=http://devcac:7000
-ENV VITE_API_URL_AUTH=http://devcac:7000
+ARG VITE_API_BASE_URL=http://127.0.0.1:5000
+ENV VITE_API_BASE_URL=http://127.0.0.1:5000
 
 ENV VITE_SYSTEM_ID="0f7d734a-a964-4693-ae0d-bad8dd05fe15"
 

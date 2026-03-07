@@ -8,20 +8,20 @@ services:
       args:
         # URL do backend embarcada no build do Vite
         VITE_API_BASE_URL: http://devcac:6011/api
-    image: smsagenda-frontend:latest
-    container_name: smsagenda-frontend
+    image: cinerate-frontend:latest
+    container_name: cinerate-frontend
     ports:
       - "3000:80"
     restart: unless-stopped
     networks:
-      - smsagenda-network
+      - cinerate-network
     environment:
       # Variáveis de runtime (se necessário)
       - TZ=America/Sao_Paulo
     labels:
-      - "com.smsagenda.service=frontend"
-      - "com.smsagenda.description=Interface React do SMSAgenda"
+      - "com.cinerate.service=frontend"
+      - "com.cinerate.description=Interface React do Cinerate"
 
 networks:
-  smsagenda-network:
+  cinerate-network:
     driver: bridge
