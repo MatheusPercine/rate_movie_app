@@ -13,6 +13,9 @@ const StarRating = ({ value, onChange, onRemove, size = 32, disabled = false }: 
   const [hover, setHover] = useState<number | null>(null);
 
   const display = hover ?? value ?? 0;
+  const starButtonClassName = disabled
+    ? "cursor-not-allowed opacity-60"
+    : "cursor-pointer hover:scale-110";
 
   return (
     <div className="flex flex-col items-start gap-2">
@@ -25,7 +28,8 @@ const StarRating = ({ value, onChange, onRemove, size = 32, disabled = false }: 
             onMouseLeave={() => setHover(null)}
             onClick={() => onChange(star)}
             disabled={disabled}
-            className="transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:opacity-60"
+            aria-label={`Avaliar com ${star} estrela${star > 1 ? "s" : ""}`}
+            className={`transition-transform ${starButtonClassName}`}
           >
             <Star
               size={size}

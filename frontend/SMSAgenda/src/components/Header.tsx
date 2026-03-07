@@ -36,9 +36,9 @@ const Header = ({
         {/* Nav links */}
         <nav className="flex items-center gap-1 shrink-0">
           <Link
-            to="/resultados"
+            to="/results"
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              location.pathname === "/resultados"
+              location.pathname === "/results"
                 ? "text-primary"
                 : "text-muted-foreground hover:text-foreground"
             }`}
@@ -62,7 +62,7 @@ const Header = ({
           value={selectedGenre}
           onChange={(e) => {
             onGenreChange(e.target.value);
-            if (location.pathname !== "/resultados") navigate("/resultados");
+            if (location.pathname !== "/results") navigate("/results");
           }}
           className="bg-secondary text-secondary-foreground text-sm rounded-md px-2 py-1.5 border border-border focus:outline-none focus:ring-1 focus:ring-ring shrink-0"
         >
@@ -77,7 +77,7 @@ const Header = ({
           value={selectedYear}
           onChange={(e) => {
             onYearChange(e.target.value);
-            if (location.pathname !== "/resultados") navigate("/resultados");
+            if (location.pathname !== "/results") navigate("/results");
           }}
           className="bg-secondary text-secondary-foreground text-sm rounded-md px-2 py-1.5 border border-border focus:outline-none focus:ring-1 focus:ring-ring shrink-0"
         >
@@ -96,7 +96,7 @@ const Header = ({
             value={searchQuery}
             onChange={(e) => {
               onSearchChange(e.target.value);
-              if (location.pathname !== "/resultados") navigate("/resultados");
+              if (location.pathname !== "/results") navigate("/results");
             }}
             className="w-full bg-secondary text-foreground text-sm rounded-md pl-9 pr-8 py-1.5 border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
           />

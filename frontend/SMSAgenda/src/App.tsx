@@ -48,7 +48,7 @@ function App() {
 
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/resultados" replace />} />
+      <Route path="/" element={<Navigate to="/results" replace />} />
       <Route
         element={
           <MoviesHeaderLayout
@@ -62,7 +62,7 @@ function App() {
         }
       >
         <Route
-          path="/resultados"
+          path="/results"
           element={
             <PrivateRoute>
               <SearchPage

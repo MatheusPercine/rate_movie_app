@@ -3,6 +3,7 @@ from pathlib import Path
 from flask import Flask, jsonify, request
 from flask_cors import CORS
 from dotenv import load_dotenv
+from sqlalchemy import inspect, text
 
 from config import Config
 from models import Rating, db
@@ -26,6 +27,7 @@ def create_app(config_overrides: dict | None = None) -> Flask:
 
     with app.app_context():
         db.create_all()
+        ensure_rating_schema()
 
     register_routes(app)
     register_error_handlers(app)
@@ -55,10 +57,10 @@ def register_routes(app: Flask) -> None:
         query = request.args.get("query", "").strip()
         page = request.args.get("page", default=1, type=int)
 
-        if not query:
-            return jsonify({"error": "O parâmetro 'query' é obrigatório."}), 400
-
         tmdb_client = TmdbClient()
+        if not query:
+            return jsonify(tmdb_client.get_popular_movies(page=page))
+
         return jsonify(tmdb_client.search_movies(query=query, page=page))
 
     @app.get("/api/movies/<int:movie_id>")
@@ -85,8 +87,10 @@ def register_routes(app: Flask) -> None:
             items.append(
                 {
                     **movie,
+                    "title": movie.get("title") or rating.movie_title,
                     "user_rating": rating.rating,
                     "rating_id": rating.id,
+                    "movie_title": rating.movie_title,
                     "created_at": rating.created_at.isoformat(),
                     "updated_at": rating.updated_at.isoformat(),
                 }
@@ -107,6 +111,7 @@ def register_routes(app: Flask) -> None:
         payload = request.get_json(silent=True) or {}
         movie_id = payload.get("movie_id")
         score = payload.get("rating")
+        movie_title = normalize_movie_title(payload.get("movie_title"))
 
         validation_error = validate_rating_payload(movie_id, score)
         if validation_error:
@@ -116,7 +121,9 @@ def register_routes(app: Flask) -> None:
         if existing_rating:
             return jsonify({"error": "Esse filme já foi avaliado."}), 409
 
-        rating = Rating(movie_id=movie_id, rating=score)
+        resolved_movie_title = movie_title or get_movie_title(movie_id)
+        rating = Rating(movie_id=movie_id,
+                        movie_title=resolved_movie_title, rating=score)
         db.session.add(rating)
         db.session.commit()
 
@@ -127,6 +134,7 @@ def register_routes(app: Flask) -> None:
     def update_rating(movie_id: int):
         payload = request.get_json(silent=True) or {}
         score = payload.get("rating")
+        movie_title = normalize_movie_title(payload.get("movie_title"))
 
         validation_error = validate_rating_payload(
             movie_id, score, validate_movie_id=False)
@@ -138,6 +146,10 @@ def register_routes(app: Flask) -> None:
             return jsonify({"error": "Avaliação não encontrada."}), 404
 
         rating.rating = score
+        if movie_title:
+            rating.movie_title = movie_title
+        elif not rating.movie_title:
+            rating.movie_title = get_movie_title(movie_id)
         db.session.commit()
 
         return jsonify(rating.to_dict())
@@ -168,6 +180,30 @@ def register_error_handlers(app: Flask) -> None:
     def handle_internal_server_error(_error):
         db.session.rollback()
         return jsonify({"error": "Erro interno do servidor."}), 500
+
+
+def ensure_rating_schema() -> None:
+    inspector = inspect(db.engine)
+    columns = {column["name"] for column in inspector.get_columns("ratings")}
+
+    if "movie_title" not in columns:
+        db.session.execute(
+            text("ALTER TABLE ratings ADD COLUMN movie_title VARCHAR(255)"))
+        db.session.commit()
+
+
+def normalize_movie_title(value) -> str | None:
+    if not isinstance(value, str):
+        return None
+
+    normalized_value = value.strip()
+    return normalized_value or None
+
+
+def get_movie_title(movie_id: int) -> str | None:
+    tmdb_client = TmdbClient()
+    movie_summary = tmdb_client.get_movie_summary(movie_id)
+    return normalize_movie_title(movie_summary.get("title"))
 
 
 def validate_rating_payload(movie_id, score, validate_movie_id: bool = True):

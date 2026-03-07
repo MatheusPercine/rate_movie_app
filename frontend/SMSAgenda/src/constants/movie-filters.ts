@@ -23,7 +23,7 @@ export const GENRE_OPTIONS = [
 export const GENRES = GENRE_OPTIONS.map((genre) => genre.name);
 
 const currentYear = new Date().getFullYear();
-export const YEARS = Array.from({ length: 20 }, (_, index) => currentYear - index);
+export const YEARS = Array.from({ length: 80 }, (_, index) => currentYear - index);
 
 export function getGenreIdByName(name: string): number | null {
   const genre = GENRE_OPTIONS.find((option) => option.name === name);

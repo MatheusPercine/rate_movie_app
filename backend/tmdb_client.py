@@ -1,3 +1,4 @@
+from math import ceil
 from typing import Any
 
 import requests
@@ -11,6 +12,9 @@ class TmdbClientError(Exception):
 
 
 class TmdbClient:
+    TMDB_PAGE_SIZE = 20
+    APP_PAGE_SIZE = 30
+
     def __init__(self) -> None:
         self.base_url = current_app.config["TMDB_BASE_URL"]
         self.api_key = current_app.config["TMDB_API_KEY"]
@@ -51,15 +55,45 @@ class TmdbClient:
             "genre_ids": movie.get("genre_ids", []),
         }
 
-    def search_movies(self, query: str, page: int = 1) -> dict[str, Any]:
-        payload = self._request(
-            "/search/movie", query=query, page=page, include_adult=False)
+    def _get_paginated_movies(self, path: str, page: int = 1, **params: Any) -> dict[str, Any]:
+        normalized_page = max(page, 1)
+        start_index = (normalized_page - 1) * self.APP_PAGE_SIZE
+        start_tmdb_page = (start_index // self.TMDB_PAGE_SIZE) + 1
+        start_offset = start_index % self.TMDB_PAGE_SIZE
+
+        payload = self._request(path, page=start_tmdb_page, **params)
+        total_results = payload.get("total_results", 0)
+        tmdb_total_pages = payload.get("total_pages", 0)
+
+        collected_movies = list(payload.get("results", []))[start_offset:]
+        current_tmdb_page = start_tmdb_page
+
+        while len(collected_movies) < self.APP_PAGE_SIZE and current_tmdb_page < tmdb_total_pages:
+            current_tmdb_page += 1
+            next_payload = self._request(
+                path, page=current_tmdb_page, **params)
+            collected_movies.extend(next_payload.get("results", []))
+
+        total_pages = ceil(
+            total_results / self.APP_PAGE_SIZE) if total_results else 0
+
         return {
-            "page": payload.get("page", page),
-            "total_pages": payload.get("total_pages", 0),
-            "total_results": payload.get("total_results", 0),
-            "results": [self._normalize_movie_summary(movie) for movie in payload.get("results", [])],
+            "page": normalized_page,
+            "total_pages": total_pages,
+            "total_results": total_results,
+            "results": [
+                self._normalize_movie_summary(movie)
+                for movie in collected_movies[: self.APP_PAGE_SIZE]
+            ],
         }
+
+    def search_movies(self, query: str, page: int = 1) -> dict[str, Any]:
+        return self._get_paginated_movies(
+            "/search/movie", query=query, page=page, include_adult=False
+        )
+
+    def get_popular_movies(self, page: int = 1) -> dict[str, Any]:
+        return self._get_paginated_movies("/movie/popular", page=page)
 
     def get_movie_details(self, movie_id: int) -> dict[str, Any]:
         payload = self._request(

@@ -9,6 +9,8 @@ import { useDebounce } from "@/hooks/useDebounce";
 import { useRatings } from "@/hooks/useRatings";
 import { searchMovies } from "@/services/movies";
 
+const MOVIES_PER_PAGE = 30;
+
 interface SearchPageProps {
   searchQuery: string;
   selectedGenre: string;
@@ -20,7 +22,6 @@ const SearchPage = ({ searchQuery, selectedGenre, selectedYear }: SearchPageProp
   const debouncedQuery = useDebounce(searchQuery.trim(), 400);
   const { getRating } = useRatings();
   const selectedGenreId = useMemo(() => getGenreIdByName(selectedGenre), [selectedGenre]);
-  const hasSearchQuery = debouncedQuery.length > 0;
 
   useEffect(() => {
     setCurrentPage(1);
@@ -34,7 +35,6 @@ const SearchPage = ({ searchQuery, selectedGenre, selectedYear }: SearchPageProp
   } = useQuery({
     queryKey: ["movie-search", debouncedQuery, currentPage],
     queryFn: () => searchMovies({ query: debouncedQuery, page: currentPage }),
-    enabled: hasSearchQuery,
     placeholderData: keepPreviousData,
   });
 
@@ -52,24 +52,19 @@ const SearchPage = ({ searchQuery, selectedGenre, selectedYear }: SearchPageProp
     return result;
   }, [data?.results, selectedGenreId, selectedYear]);
 
-  const loading = hasSearchQuery && (isLoading || isFetching);
+  const loading = isLoading || isFetching;
   const totalPages = data?.totalPages ?? 0;
   const errorMessage = error instanceof Error ? error.message : "Não foi possível buscar filmes.";
 
   return (
     <div className="pt-20 pb-12 px-4 container mx-auto min-h-screen">
       <h1 className="text-2xl font-bold mb-6 text-foreground">
-        {hasSearchQuery ? `Resultados para "${debouncedQuery}":` : "Pesquisar filmes"}
+        {debouncedQuery ? `Resultados para "${debouncedQuery}":` : "Filmes populares"}
       </h1>
 
-      {!hasSearchQuery ? (
-        <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
-          <p className="text-lg">Digite o nome de um filme para pesquisar no TMDB.</p>
-          <p className="text-sm mt-1">Os resultados serão carregados diretamente do backend.</p>
-        </div>
-      ) : loading ? (
+      {loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
-          {Array.from({ length: 12 }).map((_, i) => (
+          {Array.from({ length: MOVIES_PER_PAGE }).map((_, i) => (
             <MovieCardSkeleton key={i} />
           ))}
         </div>
@@ -81,7 +76,11 @@ const SearchPage = ({ searchQuery, selectedGenre, selectedYear }: SearchPageProp
       ) : filteredMovies.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
           <p className="text-lg">Nenhum filme encontrado.</p>
-          <p className="text-sm mt-1">Tente outro termo de busca ou ajuste os filtros.</p>
+          <p className="text-sm mt-1">
+            {debouncedQuery
+              ? "Tente outro termo de busca ou ajuste os filtros."
+              : "Não foi possível carregar os filmes populares com os filtros atuais."}
+          </p>
         </div>
       ) : (
         <>

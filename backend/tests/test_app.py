@@ -20,6 +20,24 @@ class FakeTmdbClient:
             ],
         }
 
+    def get_popular_movies(self, page: int = 1):
+        return {
+            "page": page,
+            "total_pages": 3,
+            "total_results": 60,
+            "results": [
+                {
+                    "id": 680,
+                    "title": "Pulp Fiction",
+                    "poster_path": "/popular.jpg",
+                    "poster_url": "https://image.tmdb.org/t/p/w500/popular.jpg",
+                    "release_date": "1994-10-14",
+                    "overview": "Popular overview",
+                    "genre_ids": [80, 53],
+                }
+            ],
+        }
+
     def get_movie_details(self, movie_id: int):
         return {
             "id": movie_id,
@@ -66,10 +84,24 @@ def test_create_and_get_rating(monkeypatch):
     response = client.post("/api/ratings", json={"movie_id": 550, "rating": 5})
     assert response.status_code == 201
     assert response.get_json()["rating"] == 5
+    assert response.get_json()["movie_title"] == "Fight Club"
 
     response = client.get("/api/ratings/550")
     assert response.status_code == 200
     assert response.get_json()["movie_id"] == 550
+    assert response.get_json()["movie_title"] == "Fight Club"
+
+
+def test_empty_query_returns_popular_movies(monkeypatch):
+    client, _app = create_test_client(monkeypatch)
+
+    response = client.get("/api/movies/search")
+    payload = response.get_json()
+
+    assert response.status_code == 200
+    assert payload["total_results"] == 60
+    assert payload["results"][0]["title"] == "Pulp Fiction"
+    assert payload["total_pages"] == 3
 
 
 def test_list_rated_movies(monkeypatch):
@@ -82,6 +114,7 @@ def test_list_rated_movies(monkeypatch):
     assert response.status_code == 200
     assert payload["total"] == 1
     assert payload["results"][0]["user_rating"] == 4
+    assert payload["results"][0]["movie_title"] == "Fight Club"
 
 
 def test_movie_details_includes_user_rating(monkeypatch):
@@ -99,9 +132,11 @@ def test_update_and_delete_rating(monkeypatch):
     client, _app = create_test_client(monkeypatch)
     client.post("/api/ratings", json={"movie_id": 550, "rating": 2})
 
-    response = client.put("/api/ratings/550", json={"rating": 5})
+    response = client.put("/api/ratings/550",
+                          json={"rating": 5, "movie_title": "Clube da Luta"})
     assert response.status_code == 200
     assert response.get_json()["rating"] == 5
+    assert response.get_json()["movie_title"] == "Clube da Luta"
 
     response = client.delete("/api/ratings/550")
     assert response.status_code == 204
