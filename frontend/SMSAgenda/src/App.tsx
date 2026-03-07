@@ -1,5 +1,4 @@
 import { Routes, Route, Navigate, Outlet } from "react-router-dom";
-import { CompleteLayout } from "./components/layout.tsx";
 import PrivateRoute from "./routes/PrivateRoute";
 
 import SearchPage from "./pages/SearchPage.tsx";
@@ -7,9 +6,6 @@ import { useState } from "react";
 import MovieDetailPage from "./pages/MovieDetailPage.tsx";
 import RatedMoviesPage from "./pages/RatedMoviesPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import Header from "@/components/Header";
 
 interface MoviesHeaderLayoutProps {
@@ -49,11 +45,10 @@ function App() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedGenre, setSelectedGenre] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
+
   return (
-    
-    
     <Routes>
-      <Route path="/" element={<Navigate to="/agenda" replace />} />
+      <Route path="/" element={<Navigate to="/resultados" replace />} />
       <Route
         element={
           <MoviesHeaderLayout
@@ -80,7 +75,7 @@ function App() {
         />
         <Route path="/movie/:id" element={<MovieDetailPage />} />
         <Route path="/rated" element={<RatedMoviesPage />} />
-        <Route path="/not_found" element={<NotFound />} />
+        <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>
   );

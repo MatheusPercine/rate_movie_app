@@ -6,9 +6,10 @@ interface StarRatingProps {
   onChange: (rating: number) => void;
   onRemove?: () => void;
   size?: number;
+  disabled?: boolean;
 }
 
-const StarRating = ({ value, onChange, onRemove, size = 32 }: StarRatingProps) => {
+const StarRating = ({ value, onChange, onRemove, size = 32, disabled = false }: StarRatingProps) => {
   const [hover, setHover] = useState<number | null>(null);
 
   const display = hover ?? value ?? 0;
@@ -19,10 +20,12 @@ const StarRating = ({ value, onChange, onRemove, size = 32 }: StarRatingProps) =
         {[1, 2, 3, 4, 5].map((star) => (
           <button
             key={star}
+            type="button"
             onMouseEnter={() => setHover(star)}
             onMouseLeave={() => setHover(null)}
             onClick={() => onChange(star)}
-            className="transition-transform hover:scale-110"
+            disabled={disabled}
+            className="transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <Star
               size={size}
@@ -40,7 +43,9 @@ const StarRating = ({ value, onChange, onRemove, size = 32 }: StarRatingProps) =
           <span className="text-sm text-muted-foreground">Sua nota: {value}/5</span>
           {onRemove && (
             <button
+              type="button"
               onClick={onRemove}
+              disabled={disabled}
               className="text-xs text-destructive hover:underline"
             >
               Remover avaliação

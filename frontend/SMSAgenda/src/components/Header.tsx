@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Search, X, User, UserPlus, Film } from "lucide-react";
 import { useState } from "react";
-import { GENRES, YEARS } from "@/data/movies";
+import { GENRES, YEARS } from "@/constants/movie-filters";
 
 interface HeaderProps {
   searchQuery: string;
@@ -36,9 +36,9 @@ const Header = ({
         {/* Nav links */}
         <nav className="flex items-center gap-1 shrink-0">
           <Link
-            to="/"
+            to="/resultados"
             className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${
-              location.pathname === "/"
+              location.pathname === "/resultados"
                 ? "text-primary"
                 : "text-muted-foreground hover:text-foreground"
             }`}
@@ -62,7 +62,7 @@ const Header = ({
           value={selectedGenre}
           onChange={(e) => {
             onGenreChange(e.target.value);
-            if (location.pathname !== "/") navigate("/");
+            if (location.pathname !== "/resultados") navigate("/resultados");
           }}
           className="bg-secondary text-secondary-foreground text-sm rounded-md px-2 py-1.5 border border-border focus:outline-none focus:ring-1 focus:ring-ring shrink-0"
         >
@@ -77,7 +77,7 @@ const Header = ({
           value={selectedYear}
           onChange={(e) => {
             onYearChange(e.target.value);
-            if (location.pathname !== "/") navigate("/");
+            if (location.pathname !== "/resultados") navigate("/resultados");
           }}
           className="bg-secondary text-secondary-foreground text-sm rounded-md px-2 py-1.5 border border-border focus:outline-none focus:ring-1 focus:ring-ring shrink-0"
         >
@@ -96,7 +96,7 @@ const Header = ({
             value={searchQuery}
             onChange={(e) => {
               onSearchChange(e.target.value);
-              if (location.pathname !== "/") navigate("/");
+              if (location.pathname !== "/resultados") navigate("/resultados");
             }}
             className="w-full bg-secondary text-foreground text-sm rounded-md pl-9 pr-8 py-1.5 border border-border placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
           />

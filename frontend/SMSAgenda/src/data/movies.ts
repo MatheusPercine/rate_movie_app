@@ -1,5 +1,3 @@
-import type { Movie } from "../types/movie";
-
 export const GENRES = [
   "Ação", "Aventura", "Comédia", "Drama", "Ficção Científica",
   "Terror", "Romance", "Animação", "Suspense", "Fantasia"
@@ -7,7 +5,7 @@ export const GENRES = [
 
 export const YEARS = [2024, 2023, 2022, 2021, 2020, 2019, 2018, 2017, 2016, 2015];
 
-export const movies: Movie[] = [
+export const movies = [
   {
     id: 1,
     title: "A Última Fronteira",

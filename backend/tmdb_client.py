@@ -48,6 +48,7 @@ class TmdbClient:
             "poster_url": f"{self.image_base_url}{poster_path}" if poster_path else None,
             "release_date": movie.get("release_date"),
             "overview": movie.get("overview"),
+            "genre_ids": movie.get("genre_ids", []),
         }
 
     def search_movies(self, query: str, page: int = 1) -> dict[str, Any]:
