@@ -1,0 +1,27 @@
+version: '3.8'
+
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        # URL do backend embarcada no build do Vite
+        VITE_API_BASE_URL: http://devcac:6011/api
+    image: smsagenda-frontend:latest
+    container_name: smsagenda-frontend
+    ports:
+      - "3000:80"
+    restart: unless-stopped
+    networks:
+      - smsagenda-network
+    environment:
+      # Variáveis de runtime (se necessário)
+      - TZ=America/Sao_Paulo
+    labels:
+      - "com.smsagenda.service=frontend"
+      - "com.smsagenda.description=Interface React do SMSAgenda"
+
+networks:
+  smsagenda-network:
+    driver: bridge
