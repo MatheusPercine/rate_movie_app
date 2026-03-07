@@ -26,7 +26,7 @@ const MovieDetailPage = () => {
       <div className="pt-20 pb-12 px-4 container mx-auto min-h-screen flex flex-col items-center justify-center">
         <p className="text-xl text-muted-foreground">Filme não encontrado.</p>
         <button
-          onClick={() => navigate("/resultados")}
+          onClick={() => navigate("/results")}
           className="mt-4 text-primary hover:underline"
         >
           Voltar ao início
@@ -50,7 +50,7 @@ const MovieDetailPage = () => {
         <p className="text-xl text-destructive">Erro ao carregar detalhes.</p>
         <p className="text-sm text-muted-foreground">{errorMessage}</p>
         <button
-          onClick={() => navigate("/resultados")}
+          onClick={() => navigate("/results")}
           className="text-primary hover:underline"
         >
           Voltar para a busca

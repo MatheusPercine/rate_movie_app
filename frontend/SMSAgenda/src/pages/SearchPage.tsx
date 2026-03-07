@@ -59,13 +59,13 @@ const SearchPage = ({ searchQuery, selectedGenre, selectedYear }: SearchPageProp
   return (
     <div className="pt-20 pb-12 px-4 container mx-auto min-h-screen">
       <h1 className="text-2xl font-bold mb-6 text-foreground">
-        {hasSearchQuery ? `Resultados para "${debouncedQuery}":` : "Pesquisar filmes"}
+        {hasSearchQuery ? `results para "${debouncedQuery}":` : "Pesquisar filmes"}
       </h1>
 
       {!hasSearchQuery ? (
         <div className="flex flex-col items-center justify-center py-24 text-muted-foreground">
           <p className="text-lg">Digite o nome de um filme para pesquisar no TMDB.</p>
-          <p className="text-sm mt-1">Os resultados serão carregados diretamente do backend.</p>
+          <p className="text-sm mt-1">Os results serão carregados diretamente do backend.</p>
         </div>
       ) : loading ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
