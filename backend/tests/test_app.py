@@ -20,6 +20,24 @@ class FakeTmdbClient:
             ],
         }
 
+    def get_popular_movies(self, page: int = 1):
+        return {
+            "page": page,
+            "total_pages": 3,
+            "total_results": 60,
+            "results": [
+                {
+                    "id": 680,
+                    "title": "Pulp Fiction",
+                    "poster_path": "/popular.jpg",
+                    "poster_url": "https://image.tmdb.org/t/p/w500/popular.jpg",
+                    "release_date": "1994-10-14",
+                    "overview": "Popular overview",
+                    "genre_ids": [80, 53],
+                }
+            ],
+        }
+
     def get_movie_details(self, movie_id: int):
         return {
             "id": movie_id,
@@ -72,6 +90,18 @@ def test_create_and_get_rating(monkeypatch):
     assert response.status_code == 200
     assert response.get_json()["movie_id"] == 550
     assert response.get_json()["movie_title"] == "Fight Club"
+
+
+def test_empty_query_returns_popular_movies(monkeypatch):
+    client, _app = create_test_client(monkeypatch)
+
+    response = client.get("/api/movies/search")
+    payload = response.get_json()
+
+    assert response.status_code == 200
+    assert payload["total_results"] == 60
+    assert payload["results"][0]["title"] == "Pulp Fiction"
+    assert payload["total_pages"] == 3
 
 
 def test_list_rated_movies(monkeypatch):

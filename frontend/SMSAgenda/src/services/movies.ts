@@ -8,7 +8,7 @@ import type {
 } from "@/types/movie";
 
 interface SearchMoviesParams {
-  query: string;
+  query?: string;
   page?: number;
 }
 
@@ -118,7 +118,7 @@ function mapRatedMovie(movie: ApiRatedMovie) {
 export async function searchMovies({ query, page = 1 }: SearchMoviesParams): Promise<MovieSearchResponse> {
   const response = await api.get<ApiSearchMoviesResponse>("/movies/search", {
     params: {
-      query,
+      query: query ?? "",
       page,
     },
   });

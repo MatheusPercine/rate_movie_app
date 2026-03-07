@@ -57,10 +57,10 @@ def register_routes(app: Flask) -> None:
         query = request.args.get("query", "").strip()
         page = request.args.get("page", default=1, type=int)
 
-        if not query:
-            return jsonify({"error": "O parâmetro 'query' é obrigatório."}), 400
-
         tmdb_client = TmdbClient()
+        if not query:
+            return jsonify(tmdb_client.get_popular_movies(page=page))
+
         return jsonify(tmdb_client.search_movies(query=query, page=page))
 
     @app.get("/api/movies/<int:movie_id>")
