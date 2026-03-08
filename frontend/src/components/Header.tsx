@@ -113,14 +113,14 @@ const Header = ({
         {/* Auth buttons */}
         <div className="flex items-center gap-2 shrink-0 relative">
           <button
-            onClick={() => setShowLoginMsg((v) => !v)}
+            // onClick={() => setShowLoginMsg((v) => !v)}
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md border border-border"
           >
             <User className="h-4 w-4" />
             Login
           </button>
           <button
-            onClick={() => setShowLoginMsg((v) => !v)}
+            // onClick={() => setShowLoginMsg((v) => !v)}
             className="flex items-center gap-1.5 text-sm bg-primary text-primary-foreground font-medium px-3 py-1.5 rounded-md hover:opacity-90 transition-opacity"
           >
             <UserPlus className="h-4 w-4" />

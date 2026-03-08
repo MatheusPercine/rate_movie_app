@@ -17,8 +17,8 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # Build arg para URL do backend (embarcado no bundle JS)
-ARG VITE_API_BASE_URL=http://127.0.0.1:5000
-ENV VITE_API_BASE_URL=http://127.0.0.1:5000
+ARG VITE_API_BASE_URL=/api
+ENV VITE_API_BASE_URL=${VITE_API_BASE_URL}
 
 ENV VITE_SYSTEM_ID="0f7d734a-a964-4693-ae0d-bad8dd05fe15"
 
