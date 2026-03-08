@@ -1,0 +1,73 @@
+{
+  "hash": "4e01ebb3",
+  "configHash": "a753db7b",
+  "lockfileHash": "e3ca3ef7",
+  "browserHash": "75ce696f",
+  "optimized": {
+    "react/jsx-dev-runtime": {
+      "src": "../../node_modules/.pnpm/react@19.1.1/node_modules/react/jsx-dev-runtime.js",
+      "file": "react_jsx-dev-runtime.js",
+      "fileHash": "cdd45411",
+      "needsInterop": true
+    },
+    "react": {
+      "src": "../../node_modules/.pnpm/react@19.1.1/node_modules/react/index.js",
+      "file": "react.js",
+      "fileHash": "95c96f48",
+      "needsInterop": true
+    },
+    "react-dom/client": {
+      "src": "../../node_modules/.pnpm/react-dom@19.1.1_react@19.1.1/node_modules/react-dom/client.js",
+      "file": "react-dom_client.js",
+      "fileHash": "345623bc",
+      "needsInterop": true
+    },
+    "react-router-dom": {
+      "src": "../../node_modules/.pnpm/react-router-dom@7.9.4_reac_b8d59a4d07bb1f430f435d673323500a/node_modules/react-router-dom/dist/index.mjs",
+      "file": "react-router-dom.js",
+      "fileHash": "61abc392",
+      "needsInterop": false
+    },
+    "@tanstack/react-query": {
+      "src": "../../node_modules/.pnpm/@tanstack+react-query@5.90.8_react@19.1.1/node_modules/@tanstack/react-query/build/modern/index.js",
+      "file": "@tanstack_react-query.js",
+      "fileHash": "540b1718",
+      "needsInterop": false
+    },
+    "lucide-react": {
+      "src": "../../node_modules/.pnpm/lucide-react@0.540.0_react@19.1.1/node_modules/lucide-react/dist/esm/lucide-react.js",
+      "file": "lucide-react.js",
+      "fileHash": "2f281620",
+      "needsInterop": false
+    },
+    "sonner": {
+      "src": "../../node_modules/.pnpm/sonner@2.0.7_react-dom@19.1.1_react@19.1.1__react@19.1.1/node_modules/sonner/dist/index.mjs",
+      "file": "sonner.js",
+      "fileHash": "d84095bf",
+      "needsInterop": false
+    },
+    "zustand": {
+      "src": "../../node_modules/.pnpm/zustand@5.0.8_@types+react@_3c872ec84d3fe46be6f8da93c44c10f7/node_modules/zustand/esm/index.mjs",
+      "file": "zustand.js",
+      "fileHash": "8e77a000",
+      "needsInterop": false
+    },
+    "axios": {
+      "src": "../../node_modules/.pnpm/axios@1.13.1/node_modules/axios/index.js",
+      "file": "axios.js",
+      "fileHash": "f383e63f",
+      "needsInterop": false
+    }
+  },
+  "chunks": {
+    "chunk-35OGIGHX": {
+      "file": "chunk-35OGIGHX.js"
+    },
+    "chunk-FADBDFBI": {
+      "file": "chunk-FADBDFBI.js"
+    },
+    "chunk-G3PMV62Z": {
+      "file": "chunk-G3PMV62Z.js"
+    }
+  }
+}
