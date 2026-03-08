@@ -14,3 +14,4 @@ class Config:
         "TMDB_IMAGE_BASE_URL", "https://image.tmdb.org/t/p/w500"
     )
     TMDB_TIMEOUT_SECONDS = int(os.getenv("TMDB_TIMEOUT_SECONDS", "10"))
+    TMDB_CACHE_TTL_SECONDS = int(os.getenv("TMDB_CACHE_TTL_SECONDS", "300"))
