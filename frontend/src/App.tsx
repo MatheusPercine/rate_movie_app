@@ -7,6 +7,8 @@ import MovieDetailPage from "./pages/MovieDetailPage.tsx";
 import RatedMoviesPage from "./pages/RatedMoviesPage.tsx";
 import NotFound from "./pages/NotFound.tsx";
 import Header from "@/components/Header";
+import LoginPage from "./pages/LoginPage.tsx";
+import SignupPage from "./pages/SignupPage.tsx";
 
 interface MoviesHeaderLayoutProps {
   searchQuery: string;
@@ -49,6 +51,8 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<Navigate to="/results" replace />} />
+      <Route path="/login" element={<LoginPage />} />
+      <Route path="/signup" element={<SignupPage />} />
       <Route
         element={
           <MoviesHeaderLayout

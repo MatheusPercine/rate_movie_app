@@ -112,20 +112,20 @@ const Header = ({
 
         {/* Auth buttons */}
         <div className="flex items-center gap-2 shrink-0 relative">
-          <button
-            // onClick={() => setShowLoginMsg((v) => !v)}
+          <Link
+            to="/login"
             className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md border border-border"
           >
             <User className="h-4 w-4" />
             Login
-          </button>
-          <button
-            // onClick={() => setShowLoginMsg((v) => !v)}
+          </Link>
+          <Link
+            to="/signup"
             className="flex items-center gap-1.5 text-sm bg-primary text-primary-foreground font-medium px-3 py-1.5 rounded-md hover:opacity-90 transition-opacity"
           >
             <UserPlus className="h-4 w-4" />
             Criar conta
-          </button>
+          </Link>
           {showLoginMsg && (
             <div className="absolute top-12 right-0 bg-card border border-border rounded-lg p-4 shadow-lg text-sm text-muted-foreground w-56">
               Funcionalidade de autenticação em breve!
