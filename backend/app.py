@@ -57,12 +57,20 @@ def register_routes(app: Flask) -> None:
     def search_movies():
         query = request.args.get("query", "").strip()
         page = request.args.get("page", default=1, type=int)
+        genre_id = request.args.get("genre_id", default=None, type=int)
+        year = request.args.get("year", default=None, type=int)
 
         tmdb_client = TmdbClient()
         if not query:
-            return jsonify(tmdb_client.get_popular_movies(page=page))
+            return jsonify(
+                tmdb_client.get_popular_movies(
+                    page=page,
+                    genre_id=genre_id,
+                    year=year,
+                )
+            )
 
-        return jsonify(tmdb_client.search_movies(query=query, page=page))
+        return jsonify(tmdb_client.search_movies(query=query, page=page, year=year))
 
     @app.get("/api/movies/<int:movie_id>")
     def movie_details(movie_id: int):

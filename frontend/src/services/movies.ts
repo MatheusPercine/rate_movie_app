@@ -10,6 +10,8 @@ import type {
 interface SearchMoviesParams {
   query?: string;
   page?: number;
+  genreId?: number | null;
+  year?: number | null;
 }
 
 interface ApiMovieSummary {
@@ -115,11 +117,13 @@ function mapRatedMovie(movie: ApiRatedMovie) {
   };
 }
 
-export async function searchMovies({ query, page = 1 }: SearchMoviesParams): Promise<MovieSearchResponse> {
+export async function searchMovies({ query, page = 1, genreId, year }: SearchMoviesParams): Promise<MovieSearchResponse> {
   const response = await api.get<ApiSearchMoviesResponse>("/movies/search", {
     params: {
       query: query ?? "",
       page,
+      genre_id: genreId ?? undefined,
+      year: year ?? undefined,
     },
   });
 

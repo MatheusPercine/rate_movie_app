@@ -87,12 +87,33 @@ class TmdbClient:
             ],
         }
 
-    def search_movies(self, query: str, page: int = 1) -> dict[str, Any]:
+    def search_movies(self, query: str, page: int = 1, year: int | None = None) -> dict[str, Any]:
+        params: dict[str, Any] = {"query": query, "include_adult": False}
+        if year:
+            params["year"] = year
+
         return self._get_paginated_movies(
-            "/search/movie", query=query, page=page, include_adult=False
+            "/search/movie", page=page, **params
         )
 
-    def get_popular_movies(self, page: int = 1) -> dict[str, Any]:
+    def get_popular_movies(
+        self,
+        page: int = 1,
+        genre_id: int | None = None,
+        year: int | None = None,
+    ) -> dict[str, Any]:
+        if genre_id or year:
+            discover_params: dict[str, Any] = {
+                "sort_by": "popularity.desc",
+                "include_adult": False,
+            }
+            if genre_id:
+                discover_params["with_genres"] = genre_id
+            if year:
+                discover_params["primary_release_year"] = year
+
+            return self._get_paginated_movies("/discover/movie", page=page, **discover_params)
+
         return self._get_paginated_movies("/movie/popular", page=page)
 
     def get_movie_details(self, movie_id: int) -> dict[str, Any]:
