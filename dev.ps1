@@ -38,4 +38,4 @@ if ($NoNewWindows) {
 
 Write-Host "Backend iniciado (PID $($backendProcess.Id))."
 Write-Host "Frontend iniciado (PID $($frontendProcess.Id))."
-Write-Host "Para encerrar ambos com um comando, execute: .\stop-dev.cmd"
+# Write-Host "Para encerrar ambos com um comando, execute: .\stop-dev.cmd"
