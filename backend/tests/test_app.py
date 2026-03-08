@@ -3,7 +3,15 @@ from models import db
 
 
 class FakeTmdbClient:
-    def search_movies(self, query: str, page: int = 1):
+    last_search_args = None
+    last_popular_args = None
+
+    def search_movies(self, query: str, page: int = 1, year: int | None = None):
+        FakeTmdbClient.last_search_args = {
+            "query": query,
+            "page": page,
+            "year": year,
+        }
         return {
             "page": page,
             "total_pages": 1,
@@ -20,7 +28,12 @@ class FakeTmdbClient:
             ],
         }
 
-    def get_popular_movies(self, page: int = 1):
+    def get_popular_movies(self, page: int = 1, genre_id: int | None = None, year: int | None = None):
+        FakeTmdbClient.last_popular_args = {
+            "page": page,
+            "genre_id": genre_id,
+            "year": year,
+        }
         return {
             "page": page,
             "total_pages": 3,
@@ -62,6 +75,9 @@ class FakeTmdbClient:
 
 
 def create_test_client(monkeypatch):
+    FakeTmdbClient.last_search_args = None
+    FakeTmdbClient.last_popular_args = None
+
     app = create_app(
         {
             "TESTING": True,
@@ -102,6 +118,34 @@ def test_empty_query_returns_popular_movies(monkeypatch):
     assert payload["total_results"] == 60
     assert payload["results"][0]["title"] == "Pulp Fiction"
     assert payload["total_pages"] == 3
+
+
+def test_empty_query_with_filters_uses_global_popular_filters(monkeypatch):
+    client, _app = create_test_client(monkeypatch)
+
+    response = client.get("/api/movies/search?genre_id=80&year=1994&page=2")
+    payload = response.get_json()
+
+    assert response.status_code == 200
+    assert payload["results"][0]["title"] == "Pulp Fiction"
+    assert FakeTmdbClient.last_popular_args == {
+        "page": 2,
+        "genre_id": 80,
+        "year": 1994,
+    }
+
+
+def test_search_query_passes_year_filter_to_tmdb(monkeypatch):
+    client, _app = create_test_client(monkeypatch)
+
+    response = client.get("/api/movies/search?query=fight&year=1999&page=3")
+
+    assert response.status_code == 200
+    assert FakeTmdbClient.last_search_args == {
+        "query": "fight",
+        "page": 3,
+        "year": 1999,
+    }
 
 
 def test_list_rated_movies(monkeypatch):

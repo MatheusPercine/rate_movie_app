@@ -33,12 +33,21 @@ const SearchPage = ({ searchQuery, selectedGenre, selectedYear }: SearchPageProp
     isFetching,
     error,
   } = useQuery({
-    queryKey: ["movie-search", debouncedQuery, currentPage],
-    queryFn: () => searchMovies({ query: debouncedQuery, page: currentPage }),
+    queryKey: ["movie-search", debouncedQuery, currentPage, selectedGenreId, selectedYear],
+    queryFn: () => searchMovies({
+      query: debouncedQuery,
+      page: currentPage,
+      genreId: selectedGenreId,
+      year: selectedYear ? Number(selectedYear) : null,
+    }),
     placeholderData: keepPreviousData,
   });
 
   const filteredMovies = useMemo(() => {
+    if (!debouncedQuery) {
+      return data?.results ?? [];
+    }
+
     let result = [...(data?.results ?? [])];
 
     if (selectedGenreId !== null) {
