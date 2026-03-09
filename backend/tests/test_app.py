@@ -85,7 +85,10 @@ def create_test_client(monkeypatch):
         }
     )
 
-    monkeypatch.setattr("app.TmdbClient", FakeTmdbClient)
+    monkeypatch.setattr(
+        "application.services.movie_service.TmdbClient", FakeTmdbClient)
+    monkeypatch.setattr(
+        "application.services.rating_service.TmdbClient", FakeTmdbClient)
 
     with app.app_context():
         db.drop_all()
