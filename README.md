@@ -1,4 +1,10 @@
-# Resumo do tutorial de execução da aplicação
+# Rate Movie App
+
+Aplicação para busca de filmes via TMDB e avaliação de filmes com `React + Vite` no frontend e `Flask + PostgreSQL` no backend.
+
+# Tutorial de Execução da Aplicação
+
+## Tutorial resumido:
 
 1) Tenha instalado: `Python`, `Node.js` e `PostgreSQL`.
 2) Instale o `pnpm` globalmente pelo terminal:
@@ -11,19 +17,22 @@
 5) Crie um banco local com o nome `ratedmovies`.
 6) Na pasta `frontend`, execute o comando:
     `pnpm install`
-7) Para rodar apenas o backend, estando na pasta `backend`, execute:
-    `python app.py`
-8) Para rodar apenas o frontend, estando na pasta `frontend`, execute:
-    `pnpm dev`
-    Depois, abra `http://localhost:5173/` no navegador.
-9) Para rodar backend e frontend juntos, na raiz do projeto, execute:
+7) Para executar a aplicação com único comando, execute, na raiz do projeto, o comando:
     `.\dev.cmd`
     Depois, abra `http://localhost:5173/` no navegador.
+    Nesse comando, backend e frontend são executados juntos.
 
 
-# Rate Movie App
+Porém, para executar backend e frontend separadamente, siga os passos:
 
-Aplicação para busca de filmes via TMDB e avaliação de filmes com `React + Vite` no frontend e `Flask + PostgreSQL` no backend.
+1) Execute todos os passos até o passo 6.
+2) Para rodar apenas o backend, estando na pasta `backend`, execute:
+    `python app.py`
+3) Para rodar apenas o frontend, estando na pasta `frontend`, execute:
+    `pnpm dev`
+    Depois, abra `http://localhost:5173/` no navegador.
+
+
 
 ## Pré-requisitos
 
