@@ -15,3 +15,5 @@ class Config:
     )
     TMDB_TIMEOUT_SECONDS = int(os.getenv("TMDB_TIMEOUT_SECONDS", "10"))
     TMDB_CACHE_TTL_SECONDS = int(os.getenv("TMDB_CACHE_TTL_SECONDS", "300"))
+    JWT_ALGORITHM = os.getenv("JWT_ALGORITHM", "HS256")
+    JWT_EXPIRATION_HOURS = int(os.getenv("JWT_EXPIRATION_HOURS", "12"))

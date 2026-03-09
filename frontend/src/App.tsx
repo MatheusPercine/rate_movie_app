@@ -77,8 +77,8 @@ function App() {
             </PrivateRoute>
           }
         />
-        <Route path="/movie/:id" element={<MovieDetailPage />} />
-        <Route path="/rated" element={<RatedMoviesPage />} />
+        <Route path="/movie/:id" element={<PrivateRoute><MovieDetailPage /></PrivateRoute>} />
+        <Route path="/rated" element={<PrivateRoute><RatedMoviesPage /></PrivateRoute>} />
         <Route path="*" element={<NotFound />} />
       </Route>
     </Routes>

@@ -1,7 +1,7 @@
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Search, X, User, UserPlus, Film } from "lucide-react";
-import { useState } from "react";
+import { Search, X, User, UserPlus, Film, LogOut } from "lucide-react";
 import { GENRES, YEARS } from "@/constants/movie-filters";
+import { useAuth } from "@/lib/auth/auth-context";
 
 interface HeaderProps {
   searchQuery: string;
@@ -22,7 +22,7 @@ const Header = ({
 }: HeaderProps) => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [showLoginMsg, setShowLoginMsg] = useState(false);
+  const { usuario, estaAutenticado, logout } = useAuth();
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-sm border-b border-border">
@@ -111,28 +111,40 @@ const Header = ({
         </div>
 
         {/* Auth buttons */}
-        <div className="flex items-center gap-2 shrink-0 relative">
-          <Link
-            to="/login"
-            className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md border border-border"
-          >
-            <User className="h-4 w-4" />
-            Login
-          </Link>
-          <Link
-            to="/signup"
-            className="flex items-center gap-1.5 text-sm bg-primary text-primary-foreground font-medium px-3 py-1.5 rounded-md hover:opacity-90 transition-opacity"
-          >
-            <UserPlus className="h-4 w-4" />
-            Criar conta
-          </Link>
-          {showLoginMsg && (
-            <div className="absolute top-12 right-0 bg-card border border-border rounded-lg p-4 shadow-lg text-sm text-muted-foreground w-56">
-              Funcionalidade de autenticação em breve!
-              <button onClick={() => setShowLoginMsg(false)} className="block mt-2 text-primary text-xs">
-                Fechar
+        <div className="flex items-center gap-2 shrink-0">
+          {estaAutenticado && usuario ? (
+            <>
+              <span className="hidden sm:inline text-sm text-muted-foreground">
+                Olá, <span className="text-foreground font-medium">{usuario.name}</span>
+              </span>
+              <button
+                onClick={() => {
+                  logout();
+                  navigate("/login");
+                }}
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md border border-border"
+              >
+                <LogOut className="h-4 w-4" />
+                Sair
               </button>
-            </div>
+            </>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="flex items-center gap-1.5 text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5 rounded-md border border-border"
+              >
+                <User className="h-4 w-4" />
+                Login
+              </Link>
+              <Link
+                to="/signup"
+                className="flex items-center gap-1.5 text-sm bg-primary text-primary-foreground font-medium px-3 py-1.5 rounded-md hover:opacity-90 transition-opacity"
+              >
+                <UserPlus className="h-4 w-4" />
+                Criar conta
+              </Link>
+            </>
           )}
         </div>
       </div>

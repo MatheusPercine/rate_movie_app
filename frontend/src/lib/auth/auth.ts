@@ -1,157 +1,126 @@
-import { useAuthStore } from './auth-store'
-import { cookieUtils } from './cookie-utils'
+const TOKEN_KEY = 'cinerate_auth_token'
+const AUTH_CHANGED_EVENT = 'cinerate-auth-changed'
 
-// Função auxiliar para decodificar base64 com suporte correto a UTF-8
 function decodeBase64UTF8(base64: string): string {
-  // Decodifica base64 para bytes
-  const binaryString = atob(base64)
-
-  // Converte bytes para array de códigos
+  const normalizedBase64 = base64.replace(/-/g, '+').replace(/_/g, '/')
+  const padding = normalizedBase64.length % 4
+  const base64WithPadding = padding ? normalizedBase64.padEnd(normalizedBase64.length + (4 - padding), '=') : normalizedBase64
+  const binaryString = atob(base64WithPadding)
   const bytes = new Uint8Array(binaryString.length)
-  for (let i = 0; i < binaryString.length; i++) {
+
+  for (let i = 0; i < binaryString.length; i += 1) {
     bytes[i] = binaryString.charCodeAt(i)
   }
 
-  // Decodifica UTF-8 corretamente
   return new TextDecoder('utf-8').decode(bytes)
 }
 
-// Função para validar formato de token JWT
-const validarTokenJWT = (token: string): boolean => {
-  if (!token || typeof token !== 'string') return false
-  const partes = token.split('.')
-  return partes.length === 3 && partes.every((part) => part.length > 0)
+function emitAuthChanged(): void {
+  window.dispatchEvent(new Event(AUTH_CHANGED_EVENT))
 }
 
-// Refresh tokens podem ser opacos (não-JWT); aceitarmos qualquer string não vazia
-const validarRefreshToken = (token: string | null | undefined): boolean => {
-  if (!token || typeof token !== 'string') return false
-  return token.trim().length > 0
+function isJWT(token: string): boolean {
+  if (!token || typeof token !== 'string') {
+    return false
+  }
+
+  const parts = token.split('.')
+  return parts.length === 3 && parts.every((part) => part.length > 0)
 }
 
-// Função para obter o token JWT atual dos cookies
+export function getAuthChangedEventName(): string {
+  return AUTH_CHANGED_EVENT
+}
+
 export function getToken(): string | null {
-  const token = cookieUtils.getCookie('auth_token')
-
-  if (token && validarTokenJWT(token)) {
-    return token
-  }
-  return null
+  const token = localStorage.getItem(TOKEN_KEY)
+  return token && isJWT(token) ? token : null
 }
 
-// Função para obter o refresh token dos cookies
-export function getRefreshToken(): string | null {
-  const refreshToken = cookieUtils.getCookie('auth_refresh_token')
-  if (validarRefreshToken(refreshToken)) {
-    return refreshToken
-  }
-  return null
+export function setToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token)
+  emitAuthChanged()
 }
 
-// Função para verificar se o usuário está autenticado
+export function clearStoredAuth(): void {
+  localStorage.removeItem(TOKEN_KEY)
+  emitAuthChanged()
+}
+
 export function isAuthenticated(): boolean {
-  return useAuthStore.getState().estaAutenticado
+  const token = getToken()
+  return !!token && !isTokenNearExpiry(token, 0)
 }
 
-// Função para obter informações do usuário
 export function getUsuario() {
-  return useAuthStore.getState().usuario
+  const token = getToken()
+  if (!token) {
+    return null
+  }
+
+  const payload = getTokenInfo(token)
+  if (!payload) {
+    return null
+  }
+
+  return {
+    id: Number(payload.sub),
+    name: payload.name,
+    email: payload.email,
+  }
 }
 
-// Função para fazer logout
 export function logout(): void {
-  useAuthStore.getState().logout()
+  clearStoredAuth()
 }
 
-// Função para renovar token automaticamente
 export async function renovarToken(): Promise<boolean> {
-  return await useAuthStore.getState().renovarToken()
+  return false
 }
 
-// Função para verificar se os cookies de autenticação existem e são válidos
 export function hasAuthCookies(): boolean {
-  const token = cookieUtils.getCookie('auth_token')
-  const refreshToken = cookieUtils.getCookie('auth_refresh_token')
-
-  // Valida apenas o auth_token como JWT
-  // O refresh_token pode ser um token opaco (não JWT), então só verificamos a existência
-  return !!(
-    token &&
-    refreshToken &&
-    validarTokenJWT(token)
-  )
+  return isAuthenticated()
 }
 
-// Função para limpar todos os cookies de autenticação
 export function clearAuthCookies(): void {
-  cookieUtils.removeCookie('auth_token')
-  cookieUtils.removeCookie('auth_refresh_token')
+  clearStoredAuth()
 }
 
-// Função para validar se um token está próximo de expirar
-export function isTokenNearExpiry(token: string): boolean {
+export function isTokenNearExpiry(token: string, thresholdMs = 5 * 60 * 1000): boolean {
   try {
-    const [, base64Payload] = token.split('.')
-    const payloadString = decodeBase64UTF8(base64Payload)
-    const payload = JSON.parse(payloadString) as { exp: number }
-    const exp = payload.exp * 1000 // Converte para milissegundos
-    const now = Date.now()
-    const timeUntilExpiry = exp - now
+    const payload = getTokenInfo(token)
+    if (!payload?.exp) {
+      return true
+    }
 
-    // Retorna true se faltar menos de 5 minutos para expirar
-    return timeUntilExpiry < 5 * 60 * 1000
+    const expiration = new Date(payload.exp).getTime()
+    return expiration - Date.now() < thresholdMs
   } catch {
-    return true // Se não conseguir decodificar, considera como próximo de expirar
+    return true
   }
 }
 
-/**
- * Seleciona a permissão mais adequada quando há múltiplas permissões
- * Mapeamento da agenda:
- * - 1 = Admin
- * - 2, 3 = Solicitante
- * - 4, 5 = Viewer
- * 
- * Regra: Sempre usa a permissão com menor número (menor = maior privilégio)
- */
-function selecionarPermissaoValida(permissoes: number | number[] | string | string[]): number {
-  // Se for valor único, converte e retorna
-  if (!Array.isArray(permissoes)) {
-    return Number(permissoes)
-  }
-
-  // Converte strings para números e retorna o menor (maior privilégio)
-  const permissoesNumericas = permissoes.map(p => Number(p)).sort((a, b) => a - b)
-  
-  // Retorna a menor permissão (maior privilégio)
-  return permissoesNumericas[0] || 4
-}
-
-// Função para obter informações do token (sem validação de assinatura)
-export function getTokenInfo(token: string) {
+export function getTokenInfo(token: string): any {
   try {
-    // Decodifica o payload do JWT com suporte correto a UTF-8
     const [, base64Payload] = token.split('.')
     const payloadString = decodeBase64UTF8(base64Payload)
-    const payload = JSON.parse(payloadString)
-
-    // Trata permissão que pode vir como array
-    const permissaoSelecionada = selecionarPermissaoValida(payload.permissao)
+    const payload = JSON.parse(payloadString) as Record<string, unknown>
 
     return {
+      ...payload,
       sub: payload.sub,
-      usuarioId: payload.usuarioId,
-      tipoUsuario: payload.tipoUsuario,
-      nomeCompleto: payload.nomeCompleto,
-      permissao: permissaoSelecionada,
-      cpf: payload.cpf,
-      sistemaId: payload.sistemaId,
-      permissaoNome: Array.isArray(payload.permissaoNome) 
-        ? payload.permissaoNome[0] 
-        : payload.permissaoNome,
-      exp: new Date(payload.exp * 1000),
+      usuarioId: payload.sub,
+      tipoUsuario: 'user',
+      nomeCompleto: payload.name,
+      permissao: 1,
+      cpf: null,
+      sistemaId: null,
+      permissaoNome: 'user',
+      exp: typeof payload.exp === 'number' ? new Date(payload.exp * 1000) : null,
       iss: payload.iss,
       aud: payload.aud,
+      name: payload.name,
+      email: payload.email,
     }
   } catch {
     return null

@@ -1,19 +1,20 @@
 import { useQueryClient } from '@tanstack/react-query'
-import { createContext, useContext, type ReactNode, useEffect, useState } from 'react'
+import { createContext, useContext, type ReactNode, useCallback, useEffect, useMemo, useState } from 'react'
 
-import type { Usuario } from '@/types/auth'
+import type { AuthenticatedUser, LoginCredentials, RegisterPayload } from '@/types/auth'
 
-import { createServiceLogger } from '../logger'
+import { getCurrentUser, login as loginRequest, register as registerRequest } from '@/services/auth'
 
-import { hasAuthCookies } from './auth'
-import { useMeQuery } from './auth-queries'
-
-const authContextLogger = createServiceLogger('auth-context')
+import { clearStoredAuth, getAuthChangedEventName, getToken, setToken } from './auth'
 
 interface AuthContextValue {
-  usuario: Usuario | null
+  usuario: AuthenticatedUser | null
   estaAutenticado: boolean
   carregando: boolean
+  login: (credentials: LoginCredentials) => Promise<void>
+  register: (payload: RegisterPayload) => Promise<void>
+  logout: () => void
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined)
@@ -25,82 +26,76 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps) => {
   const queryClient = useQueryClient()
 
-  // Estado reativo para cookies
-  const [hasCookies, setHasCookies] = useState(hasAuthCookies())
+  const [usuario, setUsuario] = useState<AuthenticatedUser | null>(null)
+  const [carregando, setCarregando] = useState(true)
 
-  // Só busca usuário atual se houver cookies válidos
-  const { data: usuario, isLoading, error } = useMeQuery({
-    enabled: hasCookies,
-  })
+  const syncFromToken = useCallback(async () => {
+    const token = getToken()
 
-  // Monitora invalidação da query 'me' para atualizar hasCookies
+    if (!token) {
+      setUsuario(null)
+      setCarregando(false)
+      return
+    }
+
+    try {
+      setCarregando(true)
+      const currentUser = await getCurrentUser()
+      setUsuario(currentUser)
+    } catch {
+      clearStoredAuth()
+      setUsuario(null)
+    } finally {
+      setCarregando(false)
+    }
+  }, [])
+
   useEffect(() => {
-    const unsubscribe = queryClient.getQueryCache().subscribe((event) => {
-      if (event.type === 'updated') {
-        const { queryKey } = event.query
-        if (Array.isArray(queryKey) && queryKey[0] === 'me') {
-          const cookiesExistem = hasAuthCookies()
-          authContextLogger.debug(
-            {
-              eventType: event.type,
-              cookiesExistem,
-            },
-            'Query cache atualizada, verificando cookies',
-          )
-          setHasCookies(cookiesExistem)
-        }
-      }
-    })
+    void syncFromToken()
 
-    return () => unsubscribe()
+    const handleAuthChange = () => {
+      void syncFromToken()
+    }
+
+    const eventName = getAuthChangedEventName()
+    window.addEventListener(eventName, handleAuthChange)
+    window.addEventListener('storage', handleAuthChange)
+
+    return () => {
+      window.removeEventListener(eventName, handleAuthChange)
+      window.removeEventListener('storage', handleAuthChange)
+    }
+  }, [syncFromToken])
+
+  const login = useCallback(async (credentials: LoginCredentials) => {
+    const response = await loginRequest(credentials)
+    setToken(response.token)
+    setUsuario(response.user)
+    await queryClient.invalidateQueries()
   }, [queryClient])
 
-  // Verifica cookies periodicamente para detectar mudanças
-  // IMPORTANTE: Roda sempre, não apenas quando isLoading, para detectar
-  // quando tokens são adicionados (ex: após troca de senha)
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const cookiesExistem = hasAuthCookies()
-      setHasCookies((prev) => {
-        if (cookiesExistem !== prev) {
-          authContextLogger.debug(
-            {
-              cookiesExistem,
-              hasCookiesPrevious: prev,
-              isLoading,
-            },
-            'Cookies mudaram - polling detectou alteração',
-          )
-          return cookiesExistem
-        }
-        return prev
-      })
-    }, 500)
+  const register = useCallback(async (payload: RegisterPayload) => {
+    const response = await registerRequest(payload)
+    setToken(response.token)
+    setUsuario(response.user)
+    await queryClient.invalidateQueries()
+  }, [queryClient])
 
-    return () => clearInterval(interval)
-  }, [isLoading])
+  const logout = useCallback(() => {
+    clearStoredAuth()
+    setUsuario(null)
+    queryClient.clear()
+  }, [queryClient])
 
-  const value: AuthContextValue = {
-    usuario: usuario ?? null,
-    estaAutenticado: hasCookies && !!usuario,
-    carregando: hasCookies ? isLoading : false,
-  }
-
-  // Debug logs
-  useEffect(() => {
-    authContextLogger.debug(
-      {
-        hasCookies,
-        hasUsuario: !!usuario,
-        isLoading,
-        hasError: !!error,
-        estaAutenticado: value.estaAutenticado,
-        usuarioId: usuario?.id,
-        usuarioEmail: usuario?.email,
-      },
-      'AuthContext state atualizado',
-    )
-  }, [hasCookies, usuario, isLoading, error, value.estaAutenticado])
+  const value = useMemo<AuthContextValue>(() => ({
+    usuario,
+    estaAutenticado: !!usuario,
+    carregando,
+    login,
+    register,
+    logout,
+    refreshUser: syncFromToken,
+  }), [carregando, login, logout, register, syncFromToken, usuario])
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }

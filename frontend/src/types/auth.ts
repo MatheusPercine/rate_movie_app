@@ -1,5 +1,29 @@
 // Tipos para autenticação baseados na documentação da API
 
+export interface AuthenticatedUser {
+  id: number
+  name: string
+  email: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface LoginCredentials {
+  email: string
+  password: string
+}
+
+export interface RegisterPayload {
+  name: string
+  email: string
+  password: string
+}
+
+export interface AuthResponse {
+  token: string
+  user: AuthenticatedUser
+}
+
 export interface Usuario {
   id: string
   email: string

@@ -1,30 +1,46 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Film, Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth/auth-context";
 
 const LoginPage = () => {
   const navigate = useNavigate();
+  const { estaAutenticado, login } = useAuth();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (estaAutenticado) {
+      navigate("/results", { replace: true });
+    }
+  }, [estaAutenticado, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email || !password) {
       toast.error("Preencha todos os campos.");
       return;
     }
+
     setLoading(true);
-    setTimeout(() => {
+
+    try {
+      await login({ email, password });
+      toast.success("Login realizado com sucesso.");
+      navigate("/results", { replace: true });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Não foi possível entrar.";
+      toast.error(errorMessage);
+    } finally {
       setLoading(false);
-      toast.info("Autenticação ainda não está conectada a um backend.");
-    }, 800);
+    }
   };
 
   return (

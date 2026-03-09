@@ -1,13 +1,16 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Film, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { toast } from "sonner";
+import { useAuth } from "@/lib/auth/auth-context";
 
 const SignupPage = () => {
+  const navigate = useNavigate();
+  const { estaAutenticado, register } = useAuth();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -15,7 +18,13 @@ const SignupPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  useEffect(() => {
+    if (estaAutenticado) {
+      navigate("/results", { replace: true });
+    }
+  }, [estaAutenticado, navigate]);
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name || !email || !password || !confirmPassword) {
       toast.error("Preencha todos os campos.");
@@ -29,11 +38,19 @@ const SignupPage = () => {
       toast.error("A senha deve ter pelo menos 6 caracteres.");
       return;
     }
+
     setLoading(true);
-    setTimeout(() => {
+
+    try {
+      await register({ name, email, password });
+      toast.success("Conta criada com sucesso.");
+      navigate("/results", { replace: true });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "Não foi possível criar a conta.";
+      toast.error(errorMessage);
+    } finally {
       setLoading(false);
-      toast.info("Cadastro ainda não está conectado a um backend.");
-    }, 800);
+    }
   };
 
   return (
